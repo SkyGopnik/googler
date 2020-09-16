@@ -18,10 +18,6 @@ export default class extends React.Component {
 
     return (
       <Panel id={id}>
-        <PanelHeader>
-          Главная
-        </PanelHeader>
-
         1
       </Panel>
     );

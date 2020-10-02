@@ -24,6 +24,26 @@ body::-webkit-scrollbar {
   background: transparent !important;
 }
 
+.ScreenSpinner {
+  .PopoutWrapper__mask {
+    background: rgba(0, 0, 0, 0.4) !important;
+  }
+}
+
+.ScreenIcon {
+  width: 88px;
+  height: 88px;
+  background: #f9f9f9;
+  background: var(--tabbar_background);
+  color: var(--dynamic_green);
+  box-shadow: 0 16px 32px 0 rgba(0, 0, 0, 0.08), 0 0 8px 0 rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 body[scheme="space_gray"] {
   // Скелетон
   .react-skeleton-load {

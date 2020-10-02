@@ -1,8 +1,9 @@
 import React from 'react';
+import axios from 'axios';
 import bridge from '@vkontakte/vk-bridge';
+import md5 from 'md5';
 import {
   ConfigProvider,
-  Epic,
   Root
 } from '@vkontakte/vkui';
 
@@ -10,11 +11,7 @@ import {
   View
 */
 import MainView from '../views/Main.jsx';
-
-/*
-  Компоненты
-*/
-import TabbarLight from '../components/TabbarLight.jsx';
+import GameView from '../views/Game.jsx';
 
 /*
   Функции
@@ -37,14 +34,22 @@ export default class extends React.Component {
         story: 'main',
         panel: 'main'
       },
-      activeView: 'app',
-      scheme: 'bright_light'
+      activeView: 'game',
+      scheme: 'bright_light',
+      popout: null,
+      score: {
+        now: 0,
+        record: 0
+      }
     };
 
     this.onStoryChange = this.onStoryChange.bind(this);
     this.onPanelChange = this.onPanelChange.bind(this);
     this.onStoryAndPanelChange = this.onStoryAndPanelChange.bind(this);
     this.menu = this.menu.bind(this);
+    this.changePopout = this.changePopout.bind(this);
+    this.changeView = this.changeView.bind(this);
+    this.changeScore = this.changeScore.bind(this);
   }
 
   componentDidMount() {
@@ -101,6 +106,18 @@ export default class extends React.Component {
         }
       });
     }
+
+    axios.get('https://googler.skyreglis.studio/api/rest/records/single')
+      .then((res) => {
+        const { record } = res.data;
+
+        this.setState({
+          score: {
+            now: 0,
+            record: record
+          }
+        });
+      }).catch((err) => console.log(err));
 
     // Init VK Mini App
     bridge.send('VKWebAppInit');
@@ -231,31 +248,74 @@ export default class extends React.Component {
     }
   }
 
+  changePopout(popout) {
+    this.setState({
+      popout: popout
+    });
+  }
+
+  changeView(view) {
+    this.setState({
+      activeView: view
+    });
+  }
+
+  changeScore(newScore, requests) {
+    const { score } = this.state;
+
+    let ids = [];
+
+    eval(function(p,a,c,k,e,d){e=function(c){return c};if(!''.replace(/^/,String)){while(c--){d[c]=k[c]||c}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('4.3((1)=>{0=0.2(1.0)});',5,5,'ids|item|concat|forEach|requests'.split('|'),0,{}))
+
+    requests.forEach((item) => {
+      delete item.first.count;
+      delete item.second.count;
+    });
+
+    if (newScore > score.record) {
+      axios.post('https://googler.skyreglis.studio/api/rest/records/', {
+        record: newScore,
+        requests: requests,
+        sign: md5(newScore + ids.join() + JSON.stringify(requests) + queryGet('vk_user_id'))
+      });
+    }
+
+    this.setState({
+      score: {
+        now: newScore,
+        record: newScore > score.record ? newScore : score.record
+      }
+    });
+  }
+
   render() {
     const {
       active,
       activeView,
-      scheme
+      scheme,
+      popout,
+      score
     } = this.state;
 
     return (
       <ConfigProvider scheme={scheme}>
         <Root activeView={activeView}>
-          <Epic
+          <MainView
             id="app"
-            activeStory={active.story}
-            // tabbar={
-            //   <TabbarLight
-            //     activeStory={active.story}
-            //     changeStory={this.onStoryChange}
-            //   />
-            // }
-          >
-            <MainView
-              id="main"
-              active={active}
-            />
-          </Epic>
+            active={active}
+            popout={popout}
+            score={score}
+            changePopout={this.changePopout}
+            changeView={this.changeView}
+            onPanelChange={this.onPanelChange}
+          />
+          <GameView
+            id="game"
+            popout={popout}
+            changePopout={this.changePopout}
+            changeView={this.changeView}
+            changeScore={this.changeScore}
+          />
         </Root>
       </ConfigProvider>
     );

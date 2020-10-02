@@ -8,13 +8,16 @@ import {
   Spinner,
   Div,
   SimpleCell,
-  Avatar
+  Avatar,
+  List
 } from '@vkontakte/vkui';
 
 import Icon24Back from '@vkontakte/icons/dist/24/back';
 
 import Icon28ChevronBack from '@vkontakte/icons/dist/28/chevron_back';
 import axios from 'axios';
+
+import './Ranking.scss';
 
 const osname = platform();
 
@@ -52,16 +55,19 @@ export default class extends React.Component {
           Рейтинг
         </PanelHeader>
         {list !== null ? (
-          list.map((item) => (
-            <SimpleCell
-              target="_blank"
-              href={`https://vk.com/id${item.id}`}
-              before={<Avatar size={48} src={item.photo_100} />}
-              description={`Рекорд: ${item.record}`}
-            >
-              {item.first_name} {item.last_name}
-            </SimpleCell>
-          ))
+          <List>
+            {list.map((item, index) => (
+              <SimpleCell
+                key={`user-ranking-item-${index}`}
+                target="_blank"
+                href={`https://vk.com/id${item.id}`}
+                before={<Avatar size={48} src={item.photo_100} />}
+                description={`Рекорд: ${item.record}`}
+              >
+                {item.first_name} {item.last_name}
+              </SimpleCell>
+            ))}
+          </List>
         ) : (
           <Div>
             <Spinner />

@@ -20,6 +20,8 @@ import queryGet from '../functions/query_get.jsx';
 import isset from '../functions/isset.jsx';
 import unixTime from '../functions/unixtime.jsx';
 
+import { userAuth } from '../api/api.js';
+
 import './App.scss';
 
 let isExit = false;
@@ -40,7 +42,9 @@ export default class extends React.Component {
       score: {
         now: 0,
         record: 0
-      }
+      },
+      key: 'topsecret',
+      renderApp: false
     };
 
     this.onStoryChange = this.onStoryChange.bind(this);
@@ -53,6 +57,13 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
+    userAuth(() => {
+      console.log('userAuth');
+      this.setState({
+        renderApp: true
+      });
+    });
+
     const { active } = this.state;
 
     // Навешиваем обработчик кнопку вперёд/назад
@@ -107,17 +118,17 @@ export default class extends React.Component {
       });
     }
 
-    axios.get('https://googler.skyreglis.studio/api/rest/records/single')
-      .then((res) => {
-        const { record } = res.data;
-
-        this.setState({
-          score: {
-            now: 0,
-            record: record
-          }
-        });
-      }).catch((err) => console.log(err));
+    // axios.get('https://googler.skyreglis.studio/api/rest/records/single')
+    //   .then((res) => {
+    //     const { record } = res.data;
+    //
+    //     this.setState({
+    //       score: {
+    //         now: 0,
+    //         record: record
+    //       }
+    //     });
+    //   }).catch((err) => console.log(err));
 
     // Init VK Mini App
     bridge.send('VKWebAppInit');
@@ -273,10 +284,12 @@ export default class extends React.Component {
     });
 
     if (newScore > score.record) {
+      const { key } = this.state;
+
       axios.post('https://googler.skyreglis.studio/api/rest/records/', {
         record: newScore,
         requests: requests,
-        sign: md5(newScore + ids.join() + JSON.stringify(requests) + queryGet('vk_user_id'))
+        sign: md5(newScore + ids.join() + JSON.stringify(requests) + queryGet('vk_user_id') + key)
       });
     }
 
@@ -294,30 +307,35 @@ export default class extends React.Component {
       activeView,
       scheme,
       popout,
-      score
+      score,
+      renderApp
     } = this.state;
 
-    return (
-      <ConfigProvider scheme={scheme}>
-        <Root activeView={activeView}>
-          <MainView
-            id="app"
-            active={active}
-            popout={popout}
-            score={score}
-            changePopout={this.changePopout}
-            changeView={this.changeView}
-            onPanelChange={this.onPanelChange}
-          />
-          <GameView
-            id="game"
-            popout={popout}
-            changePopout={this.changePopout}
-            changeView={this.changeView}
-            changeScore={this.changeScore}
-          />
-        </Root>
-      </ConfigProvider>
-    );
+    if (renderApp) {
+      return (
+        <ConfigProvider scheme={scheme}>
+          <Root activeView={activeView}>
+            <MainView
+              id="app"
+              active={active}
+              popout={popout}
+              score={score}
+              changePopout={this.changePopout}
+              changeView={this.changeView}
+              onPanelChange={this.onPanelChange}
+            />
+            <GameView
+              id="game"
+              popout={popout}
+              changePopout={this.changePopout}
+              changeView={this.changeView}
+              changeScore={this.changeScore}
+            />
+          </Root>
+        </ConfigProvider>
+      );
+    }
+
+    return null;
   }
 }

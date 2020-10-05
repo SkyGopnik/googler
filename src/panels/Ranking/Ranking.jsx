@@ -8,9 +8,10 @@ import {
   Spinner,
   Div,
   SimpleCell,
-  Avatar,
-  List
+  Avatar
 } from '@vkontakte/vkui';
+
+import { Swipeable } from 'react-swipeable';
 
 import Icon24Back from '@vkontakte/icons/dist/24/back';
 
@@ -44,7 +45,7 @@ export default class extends React.Component {
     const { list } = this.state;
 
     return (
-      <Panel id={id} centered={list === null}>
+      <Panel id={id}>
         <PanelHeader
           left={
             <PanelHeaderButton onClick={() => window.history.back()}>
@@ -54,25 +55,33 @@ export default class extends React.Component {
         >
           Рейтинг
         </PanelHeader>
-        {list !== null ? (
-          <List>
-            {list.map((item, index) => (
-              <SimpleCell
-                key={`user-ranking-item-${index}`}
-                target="_blank"
-                href={`https://vk.com/id${item.id}`}
-                before={<Avatar size={48} src={item.photo_100} />}
-                description={`Рекорд: ${item.record}`}
-              >
-                {item.first_name} {item.last_name}
-              </SimpleCell>
-            ))}
-          </List>
-        ) : (
+        <Swipeable
+          className="ranking-swiper"
+          onSwipedRight={() => window.history.back()}
+        >
           <Div>
-            <Spinner />
+            {list !== null ? (
+              list.map((item, index) => (
+                <div className="user-wrapper">
+                  <div className="top-number">{index + 1}</div>
+                  <SimpleCell
+                    key={`user-ranking-item-${index}`}
+                    target="_blank"
+                    href={`https://vk.com/id${item.id}`}
+                    before={<Avatar size={48} src={item.photo_100} />}
+                    description={`Рекорд: ${item.record}`}
+                  >
+                    {item.first_name} {item.last_name}
+                  </SimpleCell>
+                </div>
+              ))
+            ) : (
+              <Div>
+                <Spinner />
+              </Div>
+            )}
           </Div>
-        )}
+        </Swipeable>
       </Panel>
     );
   }

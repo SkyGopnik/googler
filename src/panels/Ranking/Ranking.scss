@@ -1,3 +1,26 @@
 #ranking {
   overflow-y: scroll;
+
+  .Panel__in {
+    min-height: 0 !important;
+    height: 100%;
+  }
+
+  .ranking-swiper {
+    height: 100%;
+
+    .user-wrapper {
+      display: flex;
+      align-items: center;
+
+      .top-number {
+        min-width: 20px;
+        text-align: center;
+
+        font-weight: bold;
+
+        color: var(--header_tint);
+      }
+    }
+  }
 }

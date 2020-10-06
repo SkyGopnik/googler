@@ -120,7 +120,7 @@ export default class extends React.Component {
             changeScore(params.score);
             changeView('app');
           }, 'end');
-        }, 3000);
+        }, 2000);
       }
     }, firstRequest.id, secondRequest.id, type);
   }

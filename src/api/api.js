@@ -5,15 +5,27 @@ const socket = io('https://googler-io.skyreglis.studio', {
   secure: true
 });
 
-export function subscribeToTimer(cb) {
-  console.log('test');
-  socket.once('timer', (timestamp) => cb(null, timestamp));
-  socket.emit('subscribeToTimer', 1000);
+socket.on('connect', () => {
+  console.log('WSS connected');
+});
+
+socket.on('disconnect', () => {
+  console.log('WSS disconnected');
+});
+
+export function game(cb, type) {
+  socket.once('game', (params) => cb(params));
+  socket.emit('game', type);
+}
+
+export function record(cb) {
+  socket.once('record', (record) => cb(record));
+  socket.emit('record');
 }
 
 export function userAuth(cb) {
+  socket.once('userAuth', (valid) => cb(valid));
   socket.emit('userAuth', document.location.href);
-  cb();
 }
 
 export function randomRequests(cb, limit = 10, needFirstCount = false) {

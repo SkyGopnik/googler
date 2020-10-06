@@ -186,6 +186,10 @@
           z-index: 5;
         }
 
+        .logo-animate {
+          animation: spin .3s linear infinite;
+        }
+
         .first, .second {
           height: 5px;
           width: 50%;
@@ -216,6 +220,8 @@
     //}
   }
 }
+
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
 
 @media screen and (max-height: 600px) {
   #game {

@@ -20,7 +20,7 @@ import queryGet from '../functions/query_get.jsx';
 import isset from '../functions/isset.jsx';
 import unixTime from '../functions/unixtime.jsx';
 
-import { userAuth } from '../api/api.js';
+import { userAuth, record } from '../api/api.js';
 
 import './App.scss';
 
@@ -43,7 +43,6 @@ export default class extends React.Component {
         now: 0,
         record: 0
       },
-      key: 'topsecret',
       renderApp: false
     };
 
@@ -57,11 +56,21 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
-    userAuth(() => {
+    userAuth((valid) => {
       console.log('userAuth');
-      this.setState({
-        renderApp: true
-      });
+      if (valid) {
+        record((record) => {
+          this.setState({
+            score: {
+              now: 0,
+              record: record
+            },
+            renderApp: true
+          });
+        });
+      } else {
+        console.log(valid);
+      }
     });
 
     const { active } = this.state;
@@ -271,27 +280,8 @@ export default class extends React.Component {
     });
   }
 
-  changeScore(newScore, requests) {
+  changeScore(newScore) {
     const { score } = this.state;
-
-    let ids = [];
-
-    eval(function(p,a,c,k,e,d){e=function(c){return c};if(!''.replace(/^/,String)){while(c--){d[c]=k[c]||c}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('4.3((1)=>{0=0.2(1.0)});',5,5,'ids|item|concat|forEach|requests'.split('|'),0,{}))
-
-    requests.forEach((item) => {
-      delete item.first.count;
-      delete item.second.count;
-    });
-
-    if (newScore > score.record) {
-      const { key } = this.state;
-
-      axios.post('https://googler.skyreglis.studio/api/rest/records/', {
-        record: newScore,
-        requests: requests,
-        sign: md5(newScore + ids.join() + JSON.stringify(requests) + queryGet('vk_user_id') + key)
-      });
-    }
 
     this.setState({
       score: {

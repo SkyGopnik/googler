@@ -1,4 +1,5 @@
 import React from 'react';
+import bridge from '@vkontakte/vk-bridge';
 import {
   Button,
   Panel,
@@ -88,6 +89,8 @@ export default class extends React.Component {
 
     checkRequest((valid, oldRequests) => {
       if (valid) {
+        bridge.send('VKWebAppTapticNotificationOccurred', { 'type': 'success' });
+
         timer = setTimeout(() => {
           this.setState({
             shadowVisible: true
@@ -109,6 +112,8 @@ export default class extends React.Component {
           }, 1);
         }, 100);
       } else {
+        bridge.send('VKWebAppTapticNotificationOccurred', { 'type': 'error' });
+
         this.setState({
           loading: false,
           secondRequest: oldRequests[1]
@@ -120,7 +125,7 @@ export default class extends React.Component {
             changeScore(params.score);
             changeView('app');
           }, 'end');
-        }, 2000);
+        }, 1500);
       }
     }, firstRequest.id, secondRequest.id, type);
   }

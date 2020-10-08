@@ -36,14 +36,15 @@ export default class extends React.Component {
         story: 'main',
         panel: 'main'
       },
-      activeView: 'game',
+      activeView: 'app',
       scheme: 'bright_light',
       popout: null,
       score: {
         now: 0,
         record: 0
       },
-      renderApp: false
+      renderApp: false,
+      isStartScreen: true
     };
 
     this.onStoryChange = this.onStoryChange.bind(this);
@@ -53,6 +54,7 @@ export default class extends React.Component {
     this.changePopout = this.changePopout.bind(this);
     this.changeView = this.changeView.bind(this);
     this.changeScore = this.changeScore.bind(this);
+    this.changeStartScreen = this.changeStartScreen.bind(this);
   }
 
   componentDidMount() {
@@ -291,6 +293,12 @@ export default class extends React.Component {
     });
   }
 
+  async changeStartScreen(param) {
+    this.setState({
+      isStartScreen: param
+    });
+  }
+
   render() {
     const {
       active,
@@ -298,7 +306,8 @@ export default class extends React.Component {
       scheme,
       popout,
       score,
-      renderApp
+      renderApp,
+      isStartScreen
     } = this.state;
 
     if (renderApp) {
@@ -310,6 +319,7 @@ export default class extends React.Component {
               active={active}
               popout={popout}
               score={score}
+              isStartScreen={isStartScreen}
               changePopout={this.changePopout}
               changeView={this.changeView}
               onPanelChange={this.onPanelChange}
@@ -317,6 +327,8 @@ export default class extends React.Component {
             <GameView
               id="game"
               popout={popout}
+              isStartScreen={isStartScreen}
+              changeStartScreen={this.changeStartScreen}
               changePopout={this.changePopout}
               changeView={this.changeView}
               changeScore={this.changeScore}

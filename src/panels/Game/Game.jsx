@@ -39,6 +39,12 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
+    const { isStartScreen, changeStartScreen } = this.props;
+
+    if (isStartScreen) {
+      setTimeout(() => changeStartScreen(false), 500);
+    }
+
     game((params) => {
       console.log(params);
       randomRequests((requests) => {

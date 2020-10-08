@@ -24,7 +24,8 @@ export default class extends React.Component {
       popout,
       changeView,
       changePopout,
-      onPanelChange
+      onPanelChange,
+      isStartScreen
     } = this.props;
 
     return (
@@ -40,7 +41,8 @@ export default class extends React.Component {
               score,
               changeView,
               changePopout,
-              onPanelChange
+              onPanelChange,
+              isStartScreen
             }
           },
           {

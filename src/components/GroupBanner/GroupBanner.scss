@@ -1,0 +1,18 @@
+.group-banner {
+  .banner-bg {
+    //background-color: #3F8AE0;
+    background-color: #008BE4;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url("https://i.imgur.com/s3sNzky.jpg");
+    background-position: right bottom;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  //.banner-bg:after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,.1);  opacity: 1; }
+
+  .Banner__content {
+    padding-right: 50px;
+
+    text-align: left;
+  }
+}

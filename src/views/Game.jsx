@@ -21,7 +21,9 @@ export default class extends React.Component {
       popout,
       changePopout,
       changeView,
-      changeScore
+      changeScore,
+      isStartScreen,
+      changeStartScreen
     } = this.props;
 
     return (
@@ -36,7 +38,9 @@ export default class extends React.Component {
             props: {
               changePopout,
               changeView,
-              changeScore
+              changeScore,
+              isStartScreen,
+              changeStartScreen
             }
           }
         ]}

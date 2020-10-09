@@ -14,7 +14,7 @@
       align-items: center;
 
       .top-number {
-        min-width: 20px;
+        min-width: 25px;
         text-align: center;
 
         font-weight: bold;
@@ -24,6 +24,8 @@
 
       .SimpleCell {
         width: 100%;
+
+        overflow: hidden;
       }
     }
   }

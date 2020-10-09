@@ -70,6 +70,7 @@ export default class extends React.Component {
                     href={`https://vk.com/id${item.id}`}
                     before={<Avatar size={48} src={item.photo_100} />}
                     description={`Рекорд: ${item.record}`}
+                    multiline
                   >
                     {item.first_name} {item.last_name}
                   </SimpleCell>

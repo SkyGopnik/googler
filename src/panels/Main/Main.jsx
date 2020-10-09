@@ -8,12 +8,16 @@ import {
   ActionSheetItem,
   IOS,
   platform,
-  Footer, Link
+  Footer,
+  Link,
+  PromoBanner
 } from '@vkontakte/vkui';
 
 import Icon28ShareOutline from '@vkontakte/icons/dist/28/share_outline';
 import Icon28LinkOutline from '@vkontakte/icons/dist/28/link_outline';
 import Icon28PollSquareOutline from '@vkontakte/icons/dist/28/poll_square_outline';
+import Icon28ChatsOutline from '@vkontakte/icons/dist/28/chats_outline';
+import Icon28Users3Outline from '@vkontakte/icons/dist/28/users_3_outline';
 
 import Logo from '../../components/Logo.jsx';
 import Pattern from '../../components/Pattern.jsx';
@@ -30,7 +34,20 @@ export default class extends React.Component {
   constructor() {
     super();
 
+    this.state = {
+      promoBanner: null
+    };
+
     this.shareWall = this.shareWall.bind(this);
+  }
+
+  componentDidMount() {
+    bridge.send('VKWebAppGetAds')
+      .then((banner) => {
+        this.setState({
+          promoBanner: banner
+        });
+      });
   }
 
   getPhrase(score) {
@@ -109,6 +126,7 @@ export default class extends React.Component {
       onPanelChange,
       isStartScreen
     } = this.props;
+    const { promoBanner } = this.state;
 
     return (
       <Panel id={id}>
@@ -116,52 +134,51 @@ export default class extends React.Component {
           <Logo className="logo" />
         </div>
         <div className="content">
-          <div className="pattern-with-logo">
-            <Pattern className="pattern" />
-            <Logo className="logo" />
-          </div>
           <div className="buttons-with-stat">
-            {isStartScreen ? (
-              <>
-                <Title className="header-title" level="1" weight="semibold">Что гуглят больше?</Title>
-                <div className="stat">
-                  <div className="item">
-                    <Title level="3" weight="regular">Твой рекорд</Title>
-                    <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
-                  </div>
-                  <div className="item">
-                    <Title level="3" weight="regular">Место в рейтинге</Title>
-                    <Title className="stat-num" level="1" weight="regular">213</Title>
-                  </div>
-                </div>
-              </>
-            ) : (
-              score.now < score.record ? (
+            <div className="stat-block">
+              {isStartScreen ? (
                 <>
-                  <Title className="header-title" level="1" weight="semibold">{this.getPhrase(score.now)}</Title>
+                  <Title className="header-title" level="1" weight="bold">Что гуглят больше?</Title>
                   <div className="stat">
                     <div className="item">
-                      <Title level="3" weight="regular">Счёт</Title>
-                      <Title className="stat-num" level="1" weight="regular">{score.now}</Title>
-                    </div>
-                    <div className="item">
-                      <Title level="3" weight="regular">Рекорд</Title>
+                      <Title level="3" weight="regular">Твой рекорд</Title>
                       <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
                     </div>
+                    {/*<div className="item">*/}
+                    {/*  <Title level="3" weight="regular">Место в рейтинге</Title>*/}
+                    {/*  <Title className="stat-num" level="1" weight="regular">213</Title>*/}
+                    {/*</div>*/}
                   </div>
                 </>
               ) : (
-                <>
-                  <Title className="header-title" level="1" weight="semibold">{this.getPhrase(score.now)}</Title>
-                  <div className="stat">
-                    <div className="item">
-                      <Title level="3" weight="regular">Новый рекорд!</Title>
-                      <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
+                score.now < score.record ? (
+                  <>
+                    <Title className="header-title" level="1" weight="bold">{this.getPhrase(score.now)}</Title>
+                    <div className="stat">
+                      <div className="item">
+                        <Title level="3" weight="regular">Счёт</Title>
+                        <Title className="stat-num" level="1" weight="regular">{score.now}</Title>
+                      </div>
+                      <div className="item">
+                        <Title level="3" weight="regular">Рекорд</Title>
+                        <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )
-            )}
+                  </>
+                ) : (
+                  <>
+                    <Title className="header-title" level="1" weight="bold">{this.getPhrase(score.now)}</Title>
+                    <div className="stat">
+                      <div className="item">
+                        <Title level="3" weight="regular">Новый рекорд!</Title>
+                        <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
+                      </div>
+                    </div>
+                  </>
+                )
+              )}
+              <Pattern className="pattern" />
+            </div>
             {isStartScreen ? (
               <div className="buttons">
                 <Button
@@ -184,7 +201,7 @@ export default class extends React.Component {
                 </Button>
                 <div className="buttons-group" style={{ display: 'flex' }}>
                   <Button
-                    before={<Icon28PollSquareOutline />}
+                    before={<Icon28ChatsOutline />}
                     size="l"
                     mode="overlay_outline"
                     stretched
@@ -194,7 +211,7 @@ export default class extends React.Component {
                     Беседа
                   </Button>
                   <Button
-                    before={<Icon28PollSquareOutline />}
+                    before={<Icon28Users3Outline />}
                     size="l"
                     mode="overlay_outline"
                     stretched
@@ -260,8 +277,14 @@ export default class extends React.Component {
                       Поделиться
                     </Button>
                   </div>
+                  {promoBanner && (
+                    <PromoBanner
+                      className="promo-banner"
+                      bannerData={promoBanner}
+                      onClose={() => this.setState({ promoBanner: null })}
+                    />
+                  )}
                 </div>
-                {/*<GroupBanner />*/}
               </>
             )}
             <Footer>Сделано с <span style={{ color: 'var(--destructive)' }}>❤</span> от <Link href="https://vk.com/club191809582" target="_blank">SkyReglis Studio</Link></Footer>

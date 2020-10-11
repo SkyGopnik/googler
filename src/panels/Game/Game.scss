@@ -2,6 +2,56 @@
   .Panel__in {
     position: relative;
 
+    .new-score {
+      height: 100%;
+      width: 100%;
+
+      position: fixed;
+      top: 0;
+      left: 0;
+
+      z-index: 1;
+
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s, visibility 0.3s;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      background: rgba(20, 33, 50, 0.8);
+      backdrop-filter: blur(10px);
+
+      .pattern {
+        width: 350px;
+        height: 350px;
+
+        position: absolute;
+        top: calc(50% - 175px);
+        left: calc(50% - 175px);
+      }
+
+      .text {
+        text-align: center;
+
+        color: #ffffff;
+
+        .number {
+          margin-top: 10px;
+
+          font-size: 46px;
+          line-height: 46px;
+        }
+      }
+    }
+
+    .new-score-visible {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
     .content {
       height: 100vh;
       width: 100%;

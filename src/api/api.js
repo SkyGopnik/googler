@@ -6,13 +6,26 @@ const socket = io('https://googler-io.skyreglis.studio', {
 });
 
 export function game(cb, type) {
-  socket.once('game', (params) => cb(params));
-  socket.emit('game', type);
+  if (socket.connected) {
+    socket.once('game', (params) => cb(params));
+    socket.emit('game', type);
+  } else {
+    throw Error('Connection error');
+  }
 }
 
 export function record(cb) {
   socket.once('record', (record) => cb(record));
   socket.emit('record');
+}
+
+export function ranking(cb, friends, limit) {
+  if (socket.connected) {
+    socket.once('ranking', (ranking) => cb(ranking));
+    socket.emit('ranking', friends, limit);
+  } else {
+    throw Error('Connection error');
+  }
 }
 
 export function userAuth(cb) {
@@ -26,13 +39,21 @@ export function reconnect() {
 }
 
 export function randomRequests(cb, limit = 10, needFirstCount = false) {
-  socket.once('randomRequests', (requests) => cb(requests));
-  socket.emit('randomRequests', limit, needFirstCount);
+  if (socket.connected) {
+    socket.once('randomRequests', (requests) => cb(requests));
+    socket.emit('randomRequests', limit, needFirstCount);
+  } else {
+    throw Error('Connection error');
+  }
 }
 
 export function checkRequest(cb, firstId, secondId, type) {
-  socket.once('checkRequest', (valid, requests) => cb(valid, requests));
-  socket.emit('checkRequest', firstId, secondId, type);
+  if (socket.connected) {
+    socket.once('checkRequest', (valid, requests) => cb(valid, requests));
+    socket.emit('checkRequest', firstId, secondId, type);
+  } else {
+    throw Error('Connection error');
+  }
 }
 
 socket.on('connect', () => {
@@ -40,6 +61,12 @@ socket.on('connect', () => {
 });
 
 socket.on('reconnect', () => {
+  // reconnectCount += 1;
+  //
+  // if (reconnectCount > 5) {
+  //   socket.disconnect();
+  // }
+
   console.log('WSS reconnected');
 
   userAuth(() => {

@@ -112,6 +112,10 @@
             &:last-child {
               margin-left: 6px;
             }
+
+            .Button__content {
+              padding-right: 0;
+            }
           }
         }
 
@@ -170,6 +174,28 @@ body[scheme="space_gray"] {
             left: calc(50% - 150px);
 
             z-index: -1;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 375px) {
+  #main {
+    .content {
+      .buttons-with-stat {
+        .buttons {
+          .buttons-group {
+            .Button {
+              .Button__before {
+                display: none;
+              }
+
+              .Button__content {
+                padding: 11px !important;
+              }
+            }
           }
         }
       }

@@ -23,7 +23,10 @@ export default class extends React.Component {
       changeView,
       changeScore,
       isStartScreen,
-      changeStartScreen
+      changeStartScreen,
+      mainScore,
+      modal,
+      setActiveModal
     } = this.props;
 
     return (
@@ -31,6 +34,7 @@ export default class extends React.Component {
         id={id}
         activePanel="game"
         popout={popout}
+        modal={modal}
         panelList={[
           {
             id: 'game',
@@ -40,7 +44,9 @@ export default class extends React.Component {
               changeView,
               changeScore,
               isStartScreen,
-              changeStartScreen
+              changeStartScreen,
+              mainScore,
+              setActiveModal
             }
           }
         ]}

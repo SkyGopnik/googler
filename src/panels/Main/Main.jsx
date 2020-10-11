@@ -182,7 +182,7 @@ export default class extends React.Component {
             {isStartScreen ? (
               <div className="buttons">
                 <Button
-                  size="l"
+                  size="xl"
                   mode="commerce"
                   stretched
                   onClick={() => changeView('game')}
@@ -191,7 +191,7 @@ export default class extends React.Component {
                 </Button>
                 <Button
                   before={<Icon28PollSquareOutline />}
-                  size="l"
+                  size="xl"
                   mode="overlay_outline"
                   stretched
                   data-to="ranking"
@@ -202,7 +202,7 @@ export default class extends React.Component {
                 <div className="buttons-group" style={{ display: 'flex' }}>
                   <Button
                     before={<Icon28ChatsOutline />}
-                    size="l"
+                    size="xl"
                     mode="overlay_outline"
                     stretched
                     href="https://vk.me/join/AJQ1d/E8nBabv9DfXT9Pmnhs"
@@ -212,7 +212,7 @@ export default class extends React.Component {
                   </Button>
                   <Button
                     before={<Icon28Users3Outline />}
-                    size="l"
+                    size="xl"
                     mode="overlay_outline"
                     stretched
                     href="https://vk.com/club191809582"
@@ -226,7 +226,7 @@ export default class extends React.Component {
               <>
                 <div className="buttons">
                   <Button
-                    size="l"
+                    size="xl"
                     mode="commerce"
                     stretched
                     onClick={() => changeView('game')}
@@ -236,7 +236,7 @@ export default class extends React.Component {
                   <div className="buttons-group" style={{ display: 'flex' }}>
                     <Button
                       before={<Icon28PollSquareOutline />}
-                      size="l"
+                      size="xl"
                       mode="overlay_outline"
                       stretched
                       data-to="ranking"
@@ -246,7 +246,7 @@ export default class extends React.Component {
                     </Button>
                     <Button
                       before={<Icon28ShareOutline />}
-                      size="l"
+                      size="xl"
                       mode="overlay_outline"
                       stretched
                       onClick={() => changePopout(
@@ -287,7 +287,6 @@ export default class extends React.Component {
                 </div>
               </>
             )}
-            <Footer>Сделано с <span style={{ color: 'var(--destructive)' }}>❤</span> от <Link href="https://vk.com/club191809582" target="_blank">SkyReglis Studio</Link></Footer>
           </div>
         </div>
       </Panel>

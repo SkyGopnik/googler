@@ -1,10 +1,10 @@
 import React from 'react';
-import axios from 'axios';
 import bridge from '@vkontakte/vk-bridge';
-import md5 from 'md5';
 import {
   ConfigProvider,
-  Root
+  Root,
+  ModalRoot,
+  ModalCard
 } from '@vkontakte/vkui';
 
 /*
@@ -21,6 +21,8 @@ import isset from '../functions/isset.jsx';
 import unixTime from '../functions/unixtime.jsx';
 
 import { userAuth, record } from '../api/api.js';
+
+import NoConnectionGif from '../img/no-connection.gif'; // Гифка - нет соединения
 
 import './App.scss';
 
@@ -43,8 +45,21 @@ export default class extends React.Component {
         now: 0,
         record: 0
       },
+      activeModal: null,
+      modalContent: null,
+      modalHistory: [],
       renderApp: false,
       isStartScreen: true
+    };
+
+    this.modalBack = () => {
+      console.log('back');
+      const { modalHistory } = this.state;
+      // Снимаем блокировку скрола у body
+      const body = document.getElementsByTagName('body')[0];
+      body.style.overflowY = 'scroll';
+
+      this.setActiveModal(modalHistory[modalHistory.length - 2]);
     };
 
     this.onStoryChange = this.onStoryChange.bind(this);
@@ -55,6 +70,7 @@ export default class extends React.Component {
     this.changeView = this.changeView.bind(this);
     this.changeScore = this.changeScore.bind(this);
     this.changeStartScreen = this.changeStartScreen.bind(this);
+    this.setActiveModal = this.setActiveModal.bind(this);
   }
 
   componentDidMount() {
@@ -128,18 +144,6 @@ export default class extends React.Component {
         }
       });
     }
-
-    // axios.get('https://googler.skyreglis.studio/api/rest/records/single')
-    //   .then((res) => {
-    //     const { record } = res.data;
-    //
-    //     this.setState({
-    //       score: {
-    //         now: 0,
-    //         record: record
-    //       }
-    //     });
-    //   }).catch((err) => console.log(err));
 
     // Init VK Mini App
     bridge.send('VKWebAppInit');
@@ -217,6 +221,36 @@ export default class extends React.Component {
         story: story,
         panel: panel
       }
+    });
+  }
+
+  setActiveModal(activeModal, params) {
+    console.log('open');
+    const { modalHistory } = this.state;
+
+    activeModal = activeModal || null;
+    let newModalHistory = modalHistory ? [...modalHistory] : [];
+
+    console.log(newModalHistory);
+    if (activeModal === null) {
+      newModalHistory = [];
+      console.log('test1');
+    } else if (newModalHistory.indexOf(activeModal) !== -1) {
+      newModalHistory = newModalHistory.splice(0, newModalHistory.indexOf(activeModal) + 1);
+      console.log('test2');
+    } else {
+      // Блокируем скрол у body
+      const body = document.getElementsByTagName('body')[0];
+      body.style.overflowY = 'hidden';
+
+      newModalHistory.push(activeModal);
+      console.log('test3');
+    }
+
+    this.setState({
+      activeModal: activeModal,
+      modalHistory: newModalHistory,
+      modalContent: params
     });
   }
 
@@ -307,8 +341,29 @@ export default class extends React.Component {
       popout,
       score,
       renderApp,
-      isStartScreen
+      isStartScreen,
+      activeModal,
+      modalContent
     } = this.state;
+    const modal = (
+      <ModalRoot
+        activeModal={activeModal}
+        onClose={this.modalBack}
+      >
+        <ModalCard
+          id="connections-lost"
+          onClose={this.modalBack}
+          icon={<img width={90} height={70} src={NoConnectionGif} alt="Нет соединения" />}
+          header="Потеряно интернет соединение"
+          caption="Возможно, это связано с отсутствием интернет-соединения у Вашего устройства. Попробуйте перезагрузить устройство, маршрутизатор и приложение."
+          actions={[{
+            title: 'Попробовать ещё раз',
+            mode: 'primary',
+            action: () => modalContent.update()
+          }]}
+        />
+      </ModalRoot>
+    );
 
     if (renderApp) {
       return (
@@ -316,6 +371,7 @@ export default class extends React.Component {
           <Root activeView={activeView}>
             <MainView
               id="app"
+              modal={modal}
               active={active}
               popout={popout}
               score={score}
@@ -323,15 +379,19 @@ export default class extends React.Component {
               changePopout={this.changePopout}
               changeView={this.changeView}
               onPanelChange={this.onPanelChange}
+              setActiveModal={this.setActiveModal}
             />
             <GameView
               id="game"
+              modal={modal}
               popout={popout}
               isStartScreen={isStartScreen}
+              mainScore={score}
               changeStartScreen={this.changeStartScreen}
               changePopout={this.changePopout}
               changeView={this.changeView}
               changeScore={this.changeScore}
+              setActiveModal={this.setActiveModal}
             />
           </Root>
         </ConfigProvider>

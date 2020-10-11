@@ -25,7 +25,9 @@ export default class extends React.Component {
       changeView,
       changePopout,
       onPanelChange,
-      isStartScreen
+      isStartScreen,
+      modal,
+      setActiveModal
     } = this.props;
 
     return (
@@ -33,6 +35,7 @@ export default class extends React.Component {
         id={id}
         activePanel={active.panel}
         popout={popout}
+        modal={modal}
         panelList={[
           {
             id: 'main',
@@ -42,7 +45,8 @@ export default class extends React.Component {
               changeView,
               changePopout,
               onPanelChange,
-              isStartScreen
+              isStartScreen,
+              setActiveModal
             }
           },
           {

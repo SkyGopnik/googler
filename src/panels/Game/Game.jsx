@@ -5,15 +5,18 @@ import {
   Panel,
   Title,
   getClassName,
-  platform
+  platform,
+  Placeholder
 } from '@vkontakte/vkui';
 
 import Icon28DoneOutline from '@vkontakte/icons/dist/28/done_outline';
 import Icon28ArrowUpOutline from '@vkontakte/icons/dist/28/arrow_up_outline';
 import Icon28ArrowDownOutline from '@vkontakte/icons/dist/28/arrow_down_outline';
+import Icon28GhostSimleOutline from '@vkontakte/icons/dist/28/ghost_simle_outline';
 
 import AnimatedNumber from '../../components/AnimatedNumber.jsx';
 import Logo from '../../components/Logo.jsx';
+import PatternScore from '../../components/PatternScore.jsx';
 
 import { game, randomRequests, checkRequest } from '../../api/api.js';
 
@@ -32,56 +35,74 @@ export default class extends React.Component {
       secondRequest: null,
       score: 0,
       loading: false,
-      shadowVisible: false
+      shadowVisible: false,
+      scoreVisible: false,
+      isScoreShown: false,
+      error: false
     };
 
+    this.firstMount = this.firstMount.bind(this);
     this.handleBtn = this.handleBtn.bind(this);
   }
 
   componentDidMount() {
-    const { isStartScreen, changeStartScreen } = this.props;
-
-    if (isStartScreen) {
-      setTimeout(() => changeStartScreen(false), 500);
-    }
-
-    game((params) => {
-      console.log(params);
-      randomRequests((requests) => {
-        console.log('randomRequests');
-        const newRequestsArray = [];
-
-        requests.forEach((item) => {
-          const img = new Image();
-          img.src = `https://cloudskyreglis.ru/files/${item.image}`;
-
-          newRequestsArray.push({
-            id: item.id,
-            name: item.name,
-            image: item.image
-          });
-        });
-
-        this.setState({
-          firstRequest: requests[0],
-          secondRequest: requests[1]
-        });
-        console.log(requests);
-      }, 2, true);
-    }, 'start');
+    this.firstMount();
   }
 
   componentWillUnmount() {
     clearTimeout(timer);
   }
 
+  firstMount() {
+    const {
+      isStartScreen,
+      changeStartScreen
+    } = this.props;
+
+    if (isStartScreen) {
+      setTimeout(() => changeStartScreen(false), 500);
+    }
+
+    try {
+      game((params) => {
+        console.log(params);
+        randomRequests((requests) => {
+          console.log('randomRequests');
+          const newRequestsArray = [];
+
+          requests.forEach((item) => {
+            const img = new Image();
+            img.src = `https://cloudskyreglis.ru/files/${item.image}`;
+
+            newRequestsArray.push({
+              id: item.id,
+              name: item.name,
+              image: item.image
+            });
+          });
+
+          this.setState({
+            error: false,
+            firstRequest: requests[0],
+            secondRequest: requests[1]
+          });
+          console.log(requests);
+        }, 2, true);
+      }, 'start');
+    } catch (e) {
+      this.setState({
+        error: true
+      });
+    }
+  }
+
   handleBtn(type) {
     // TODO: Переписать рейтинг на WSS
-    // TODO: Реализовать панель проигрыша по дизайну из фигмы
     // TODO: Реализовать промежуточную панель по дизайну из фигмы
     const {
       changeView,
-      changeScore
+      changeScore,
+      mainScore
     } = this.props;
     const {
       firstRequest,
@@ -92,6 +113,12 @@ export default class extends React.Component {
     this.setState({
       loading: true
     });
+
+    setTimeout(() => {
+      this.setState({
+        loading: false
+      });
+    }, 3000);
 
     checkRequest((valid, oldRequests) => {
       if (valid) {
@@ -109,6 +136,19 @@ export default class extends React.Component {
           }, 500);
 
           randomRequests((requests) => {
+            if (score + 1 > mainScore.record) {
+              this.setState({
+                scoreVisible: true
+              });
+
+              setTimeout(() => {
+                this.setState({
+                  scoreVisible: false,
+                  isScoreShown: true
+                });
+              }, 1500);
+            }
+
             this.setState({
               score: score + 1,
               firstRequest: oldRequests[1],
@@ -143,86 +183,118 @@ export default class extends React.Component {
       secondRequest,
       score,
       shadowVisible,
-      loading
+      loading,
+      scoreVisible,
+      isScoreShown,
+      error
     } = this.state;
 
     return (
       <Panel id={id}>
-        <div className="content">
-          <div className={!shadowVisible ? 'shadow' : 'shadow shadow-visible'}>
-            <div className="shadow-left" />
-            <div className="shadow-right" />
-          </div>
-          <div className="score">
-            <Title level="2" weight="regular">
-              Счёт: {score}
-            </Title>
-          </div>
-          {firstRequest && (
-            <div className={`image ${getClassName('first-image', osname)}`} style={{ backgroundImage: `url(https://cloudskyreglis.ru/files/${firstRequest.image})` }}>
-              <div className="query-stat">
-                <Title level="1" weight="semibold">{firstRequest.name}</Title>
-                <Title level="2" weight="regular">{firstRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
-                <Title className="stat" level="2" weight="regular">
-                  <AnimatedNumber
-                    value={firstRequest.count}
-                    duration={1}
-                  />
-                </Title>
-                <Title level="2" weight="regular">запросов в месяц</Title>
+        {!error ? (
+          <>
+            <div className={scoreVisible && !isScoreShown ? 'new-score new-score-visible' : 'new-score'}>
+              <div className="text">
+                <Title level="1" weight="bold">Новый рекорд!</Title>
+                <div className="number">{score}</div>
               </div>
+              <PatternScore className="pattern" />
             </div>
-          )}
-          <div className="separator">
-            <Logo className={loading ? 'logo logo-animate' : 'logo'} />
-            <div className="first" />
-            <div className="second" />
-          </div>
-          {secondRequest && (
-            <div className={`image ${getClassName('second-image', osname)}`} style={{ backgroundImage: `url(https://cloudskyreglis.ru/files/${secondRequest.image})` }}>
-              {!secondRequest.count ? (
-                <div className="query-stat with-button">
-                  <div>
-                    <Title level="2" weight="regular">Сколько запросов в месяц {secondRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
-                    <Title level="1" weight="semibold">{secondRequest.name.trim()}?</Title>
-                  </div>
-                  <div className={getClassName('buttons', osname)}>
-                    <Button
-                      before={<Icon28ArrowDownOutline />}
-                      size="xl"
-                      mode="destructive"
-                      onClick={() => this.handleBtn('less')}
-                      stretched
-                    >
-                      Меньше
-                    </Button>
-                    <Button
-                      before={<Icon28ArrowUpOutline />}
-                      size="xl"
-                      mode="commerce"
-                      onClick={() => this.handleBtn('more')}
-                      stretched
-                    >
-                      Больше
-                    </Button>
+            <div className="content">
+              <div className={!shadowVisible ? 'shadow' : 'shadow shadow-visible'}>
+                <div className="shadow-left" />
+                <div className="shadow-right" />
+              </div>
+              <div className="score">
+                <Title level="2" weight="regular">
+                  Счёт: {score}
+                </Title>
+              </div>
+              {firstRequest && (
+                <div className={`image ${getClassName('first-image', osname)}`} style={{ backgroundImage: `url(https://cloudskyreglis.ru/files/${firstRequest.image})` }}>
+                  <div className="query-stat">
+                    <Title level="1" weight="semibold">{firstRequest.name}</Title>
+                    <Title level="2" weight="regular">{firstRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
+                    <Title className="stat" level="2" weight="regular">
+                      <AnimatedNumber
+                        value={firstRequest.count}
+                        duration={1}
+                      />
+                    </Title>
+                    <Title level="2" weight="regular">запросов в месяц</Title>
                   </div>
                 </div>
-              ) : (
-                <div className="query-stat">
-                  <Title level="1" weight="semibold">{secondRequest.name}</Title>
-                  <Title level="2" weight="regular">{secondRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
-                  <Title className="stat" level="2" weight="regular">
-                    <AnimatedNumber
-                      value={secondRequest.count}
-                      duration={1}
-                    />
-                  </Title>
-                  <Title level="2" weight="regular">запросов в месяц</Title>
+              )}
+              <div className="separator">
+                <Logo className={loading ? 'logo logo-animate' : 'logo'} />
+                <div className="first" />
+                <div className="second" />
+              </div>
+              {secondRequest && (
+                <div className={`image ${getClassName('second-image', osname)}`} style={{ backgroundImage: `url(https://cloudskyreglis.ru/files/${secondRequest.image})` }}>
+                  {!secondRequest.count ? (
+                    <div className="query-stat with-button">
+                      <div>
+                        <Title level="2" weight="regular">Сколько запросов в месяц {secondRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
+                        <Title level="1" weight="semibold">{secondRequest.name.trim()}?</Title>
+                      </div>
+                      <div className={getClassName('buttons', osname)}>
+                        <Button
+                          before={<Icon28ArrowDownOutline />}
+                          size="xl"
+                          mode="destructive"
+                          onClick={() => this.handleBtn('less')}
+                          disabled={loading}
+                          stretched
+                        >
+                          Меньше
+                        </Button>
+                        <Button
+                          before={<Icon28ArrowUpOutline />}
+                          size="xl"
+                          mode="commerce"
+                          onClick={() => this.handleBtn('more')}
+                          disabled={loading}
+                          stretched
+                        >
+                          Больше
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="query-stat">
+                      <Title level="1" weight="semibold">{secondRequest.name}</Title>
+                      <Title level="2" weight="regular">{secondRequest.wordForm === 0 ? 'имеет' : 'имеют'}</Title>
+                      <Title className="stat" level="2" weight="regular">
+                        <AnimatedNumber
+                          value={secondRequest.count}
+                          duration={1}
+                        />
+                      </Title>
+                      <Title level="2" weight="regular">запросов в месяц</Title>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <Placeholder
+            icon={<Icon28GhostSimleOutline width={56} height={56} />}
+            header="Плак, плак"
+            action={
+              <Button
+                size="l"
+                onClick={() => this.firstMount()}
+              >
+                Попробовать ещё раз
+              </Button>
+            }
+            stretched
+          >
+            Ой, верните интернет, без него грустно
+          </Placeholder>
+        )}
       </Panel>
     );
   }

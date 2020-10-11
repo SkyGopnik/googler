@@ -7,26 +7,45 @@
   }
 
   .ranking-swiper {
-    height: calc(100% - (61px + var(--safe-area-inset-top)));
+    height: calc(100% - (61px + var(--safe-area-inset-top) + 48px));
 
-    .user-wrapper {
-      display: flex;
-      align-items: center;
+    overflow-y: scroll;
+  }
 
-      .top-number {
-        min-width: 25px;
-        text-align: center;
+  .ranking-swiper::-webkit-scrollbar {
+    display: none;
+    width: 0px;
+  }
 
-        font-weight: bold;
+  .user-wrapper {
+    display: flex;
+    align-items: center;
 
-        color: var(--header_tint);
-      }
+    .top-number {
+      min-width: 25px;
+      text-align: center;
 
-      .SimpleCell {
-        width: 100%;
+      font-weight: bold;
 
-        overflow: hidden;
-      }
+      color: var(--header_tint);
     }
+
+    .no-width {
+      min-width: auto;
+    }
+
+    .SimpleCell {
+      width: 100%;
+
+      overflow: hidden;
+    }
+
+    &:not(:first-child):last-child {
+      margin-bottom: 80px;
+    }
+  }
+
+  .user-record {
+    background-color: var(--background_content);
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import bridge from '@vkontakte/vk-bridge';
 import {
   Group,
   Banner,
@@ -11,10 +12,25 @@ export default class extends React.Component {
   constructor() {
     super();
 
-    this.state = {};
+    this.state = {
+      isSub: false
+    };
+
+    this.subGroup = this.subGroup.bind(this);
+  }
+
+  subGroup() {
+    bridge.sendPromise('VKWebAppJoinGroup', { group_id: 191809582 })
+      .then(() => {
+        this.setState({
+          isSub: true
+        });
+      });
   }
 
   render() {
+    const { isSub } = this.state;
+
     return (
       <Group separator="hide">
         <Banner
@@ -24,7 +40,16 @@ export default class extends React.Component {
           header="Понравилось приложение?"
           subheader={<span>Подписывайся на наше сообщество, чтобы быть вкурсе всех новостей</span>}
           background={<div className="banner-bg" />}
-          actions={<Button mode="overlay_primary" size="l">Подписаться</Button>}
+          actions={
+            <Button
+              mode="overlay_primary"
+              size="l"
+              disabled={isSub}
+              onClick={() => this.subGroup()}
+            >
+              Подписаться
+            </Button>
+          }
         />
       </Group>
     );

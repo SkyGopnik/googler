@@ -13,9 +13,8 @@ import {
   Placeholder,
   Button,
   FixedLayout,
-  Separator,
   Tabs,
-  TabsItem
+  TabsItem, Separator
 } from '@vkontakte/vkui';
 
 import { Swipeable } from 'react-swipeable';
@@ -108,6 +107,7 @@ export default class extends React.Component {
               {osname === IOS ? <Icon28ChevronBack /> : <Icon24Back />}
             </PanelHeaderButton>
           }
+          separator={false}
         >
           Рейтинг
         </PanelHeader>
@@ -125,6 +125,7 @@ export default class extends React.Component {
             Друзья
           </TabsItem>
         </Tabs>
+        <Separator />
         <Swipeable
           className="ranking-swiper"
           onSwipedRight={() => window.history.back()}
@@ -135,7 +136,7 @@ export default class extends React.Component {
                 list.length !== 0 ? (
                   list.map((item, index) => (
                     <div className="user-wrapper" key={`user-ranking-item-${index}`}>
-                      <div className="top-number">{index + 1}</div>
+                      <div className="top-number">{own.user_id === String(item.id) ? 'Вы' : (index + 1)}</div>
                       <SimpleCell
                         target="_blank"
                         href={`https://vk.com/id${item.id}`}
@@ -180,10 +181,11 @@ export default class extends React.Component {
         </Swipeable>
         {own && (
           <FixedLayout vertical="bottom">
-            <Separator wide />
             <Div className="user-record">
               <div className="user-wrapper">
-                <div className="top-number no-width">~{own.position}</div>
+                {own.position > 50 && (
+                  <div className="top-number no-width">~{own.position}</div>
+                )}
                 <SimpleCell
                   target="_blank"
                   href={`https://vk.com/id${own.user_id}`}

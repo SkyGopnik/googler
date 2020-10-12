@@ -25,6 +25,9 @@ import GroupBanner from '../../components/GroupBanner/GroupBanner.jsx';
 
 import declNum from '../../functions/decl_num.jsx';
 import queryGet from '../../functions/query_get.jsx';
+import getRandomInt from '../../functions/get_random_int.jsx';
+
+import { checkUserGroupMember } from '../../api/api.js';
 
 import './Main.scss';
 
@@ -35,13 +38,22 @@ export default class extends React.Component {
     super();
 
     this.state = {
-      promoBanner: null
+      promoBanner: null,
+      showGroupBanner: false
     };
 
     this.shareWall = this.shareWall.bind(this);
   }
 
   componentDidMount() {
+    checkUserGroupMember((isMember) => {
+      this.setState({
+        showGroupBanner: isMember ? false : (
+          getRandomInt(0, 100) > 50
+        )
+      });
+    });
+
     bridge.send('VKWebAppGetAds')
       .then((banner) => {
         this.setState({
@@ -68,7 +80,7 @@ export default class extends React.Component {
       score === 5
       || score === 6
     ) {
-      phrase = 'Давай ещё раз, мы верим, что ты можешь лучше';
+      phrase = 'Давай ещё раз! Мы верим, что ты можешь лучше';
     } else if (
       score === 7
       || score === 8
@@ -126,7 +138,7 @@ export default class extends React.Component {
       onPanelChange,
       isStartScreen
     } = this.props;
-    const { promoBanner } = this.state;
+    const { promoBanner, showGroupBanner } = this.state;
 
     return (
       <Panel id={id}>
@@ -277,12 +289,16 @@ export default class extends React.Component {
                       Поделиться
                     </Button>
                   </div>
-                  {promoBanner && (
-                    <PromoBanner
-                      className="promo-banner"
-                      bannerData={promoBanner}
-                      onClose={() => this.setState({ promoBanner: null })}
-                    />
+                  {showGroupBanner ? (
+                    <GroupBanner />
+                  ) : (
+                    promoBanner && (
+                      <PromoBanner
+                        className="promo-banner"
+                        bannerData={promoBanner}
+                        onClose={() => this.setState({ promoBanner: null })}
+                      />
+                    )
                   )}
                 </div>
               </>

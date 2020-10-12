@@ -56,6 +56,15 @@ export function checkRequest(cb, firstId, secondId, type) {
   }
 }
 
+export function checkUserGroupMember(cb) {
+  if (socket.connected) {
+    socket.once('checkUserGroupMember', (isMember) => cb(isMember));
+    socket.emit('checkUserGroupMember');
+  } else {
+    throw Error('Connection error');
+  }
+}
+
 socket.on('connect', () => {
   console.log('WSS connected');
 });

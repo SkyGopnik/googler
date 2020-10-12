@@ -18,6 +18,8 @@ import AnimatedNumber from '../../components/AnimatedNumber.jsx';
 import Logo from '../../components/Logo.jsx';
 import PatternScore from '../../components/PatternScore.jsx';
 
+import queryGet from '../../functions/query_get.jsx';
+
 import { game, randomRequests, checkRequest } from '../../api/api.js';
 
 import './Game.scss';
@@ -25,6 +27,7 @@ import './Game.scss';
 const osname = platform();
 
 let timer;
+let loadingTimer;
 
 export default class extends React.Component {
   constructor() {
@@ -38,11 +41,15 @@ export default class extends React.Component {
       shadowVisible: false,
       scoreVisible: false,
       isScoreShown: false,
-      error: false
+      error: false,
+      middleVisible: false,
+      isMiddleShown: false
     };
 
     this.firstMount = this.firstMount.bind(this);
     this.handleBtn = this.handleBtn.bind(this);
+    this.endGame = this.endGame.bind(this);
+    this.continueGame = this.continueGame.bind(this);
   }
 
   componentDidMount() {
@@ -51,6 +58,7 @@ export default class extends React.Component {
 
   componentWillUnmount() {
     clearTimeout(timer);
+    clearTimeout(loadingTimer);
   }
 
   firstMount() {
@@ -97,8 +105,6 @@ export default class extends React.Component {
   }
 
   handleBtn(type) {
-    // TODO: Переписать рейтинг на WSS
-    // TODO: Реализовать промежуточную панель по дизайну из фигмы
     const {
       changeView,
       changeScore,
@@ -107,14 +113,15 @@ export default class extends React.Component {
     const {
       firstRequest,
       secondRequest,
-      score
+      score,
+      isMiddleShown
     } = this.state;
 
     this.setState({
       loading: true
     });
 
-    setTimeout(() => {
+    loadingTimer = setTimeout(() => {
       this.setState({
         loading: false
       });
@@ -166,14 +173,75 @@ export default class extends React.Component {
         });
 
         timer = setTimeout(() => {
-          game((params) => {
-            console.log(params);
-            changeScore(params.score);
-            changeView('app');
-          }, 'end');
+          const platform = queryGet('vk_platform');
+
+          if (
+            !isMiddleShown
+            && (
+              platform === 'mobile_android'
+              || platform === 'mobile_iphone'
+              || platform === 'mobile_android_messenger'
+              || platform === 'mobile_iphone_messenger'
+            )
+          ) {
+            this.setState({
+              middleVisible: true
+            });
+          } else {
+            game((params) => {
+              console.log(params);
+              changeScore(params.score);
+              changeView('app');
+            }, 'end');
+          }
         }, 1500);
       }
     }, firstRequest.id, secondRequest.id, type);
+  }
+
+  async continueGame() {
+    const {
+      secondRequest
+    } = this.state;
+
+    this.setState({
+      loading: true
+    });
+
+    loadingTimer = setTimeout(() => {
+      this.setState({
+        loading: false
+      });
+    }, 3000);
+
+    randomRequests((requests) => {
+      bridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
+
+      this.setState({
+        middleVisible: false,
+        isMiddleShown: true,
+        loading: false
+      });
+
+      this.setState({
+        firstRequest: { ...secondRequest },
+        secondRequest: requests[0],
+        loading: false
+      });
+    }, 1);
+  }
+
+  endGame() {
+    const {
+      changeView,
+      changeScore
+    } = this.props;
+
+    game((params) => {
+      console.log(params);
+      changeScore(params.score);
+      changeView('app');
+    }, 'end');
   }
 
   render() {
@@ -186,7 +254,9 @@ export default class extends React.Component {
       loading,
       scoreVisible,
       isScoreShown,
-      error
+      error,
+      middleVisible,
+      isMiddleShown
     } = this.state;
 
     return (
@@ -199,6 +269,34 @@ export default class extends React.Component {
                 <div className="number">{score}</div>
               </div>
               <PatternScore className="pattern" />
+            </div>
+            <div className={middleVisible && !isMiddleShown ? 'middleware middleware-visible' : 'middleware'}>
+              <div className="mid-content">
+                <div className="text">
+                  <Title level="1" weight="semibold">А вот и не угадал!</Title>
+                  <Title className="description" level="3" weight="regular">Хотел(а) побить рекорд? Не расстраивайся, можно посмотреть короткую рекламу и продолжить играть.</Title>
+                </div>
+                <div className="buttons">
+                  <Button
+                    mode="commerce"
+                    size="xl"
+                    onClick={() => this.continueGame()}
+                    disabled={loading}
+                    stretched
+                  >
+                    Продолжить раунд
+                  </Button>
+                  <Button
+                    className="end"
+                    mode="tertiary"
+                    size="xl"
+                    onClick={() => this.endGame()}
+                    stretched
+                  >
+                    Завершить раунд
+                  </Button>
+                </div>
+              </div>
             </div>
             <div className="content">
               <div className={!shadowVisible ? 'shadow' : 'shadow shadow-visible'}>

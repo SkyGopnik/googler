@@ -36,6 +36,7 @@ export default class extends React.Component {
     super();
 
     this.state = {
+      loading: false,
       list: null,
       own: null,
       error: false
@@ -73,19 +74,26 @@ export default class extends React.Component {
   }
 
   async getRankingList(friends) {
+    this.setState({
+      loading: true
+    });
+
+    console.log('test');
     try {
       ranking((ranking) => {
         this.setState({
           list: ranking.list,
           own: ranking.own,
           error: false,
-          activeTab: friends ? 'friends' : 'all'
+          activeTab: friends ? 'friends' : 'all',
+          loading: false
         });
       }, friends, 50);
     } catch (e) {
       this.setState({
         error: true,
-        activeTab: friends ? 'friends' : 'all'
+        activeTab: friends ? 'friends' : 'all',
+        loading: false
       });
     }
   }
@@ -96,7 +104,8 @@ export default class extends React.Component {
       list,
       own,
       error,
-      activeTab
+      activeTab,
+      loading
     } = this.state;
 
     return (
@@ -113,14 +122,16 @@ export default class extends React.Component {
         </PanelHeader>
         <Tabs>
           <TabsItem
-            onClick={() => this.getRankingList()}
+            onClick={() => activeTab !== 'all' && this.getRankingList()}
             selected={activeTab === 'all'}
+            disabled={loading}
           >
             Общий
           </TabsItem>
           <TabsItem
-            onClick={() => this.getFriendsRankingList()}
+            onClick={() => activeTab !== 'friends' && this.getFriendsRankingList()}
             selected={activeTab === 'friends'}
+            disabled={loading}
           >
             Друзья
           </TabsItem>
@@ -132,7 +143,7 @@ export default class extends React.Component {
         >
           <Div>
             {!error ? (
-              list !== null ? (
+              !loading && list ? (
                 list.length !== 0 ? (
                   list.map((item, index) => (
                     <div className="user-wrapper" key={`user-ranking-item-${index}`}>

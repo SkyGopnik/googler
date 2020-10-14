@@ -46,13 +46,17 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
-    checkUserGroupMember((isMember) => {
-      this.setState({
-        showGroupBanner: isMember ? false : (
-          getRandomInt(0, 100) > 50
-        )
+    try {
+      checkUserGroupMember((isMember) => {
+        this.setState({
+          showGroupBanner: isMember ? false : (
+            getRandomInt(0, 100) > 50
+          )
+        });
       });
-    });
+    } catch (e) {
+      console.log(e);
+    }
 
     bridge.send('VKWebAppGetAds')
       .then((banner) => {
@@ -163,7 +167,7 @@ export default class extends React.Component {
                   </div>
                 </>
               ) : (
-                score.now < score.record ? (
+                score.now <= score.record ? (
                   <>
                     <Title className="header-title" level="1" weight="bold">{this.getPhrase(score.now)}</Title>
                     <div className="stat">

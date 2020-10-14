@@ -38,7 +38,7 @@ export default class extends React.Component {
           mode="image"
           size="m"
           header="Понравилось приложение?"
-          subheader={<span>Подписывайся на наше сообщество, чтобы быть вкурсе всех новостей</span>}
+          subheader={<span>Подписывайся на наше сообщество, чтобы быть в курсе всех новостей</span>}
           background={<div className="banner-bg" />}
           actions={
             <Button

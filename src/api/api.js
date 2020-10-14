@@ -1,9 +1,6 @@
 import io from 'socket.io-client';
 
-const socket = io('https://googler-io.skyreglis.studio', {
-  transports: ['websocket'],
-  secure: true
-});
+const socket = io('https://googler-io.skyreglis.studio');
 
 export function game(cb, type) {
   if (socket.connected) {

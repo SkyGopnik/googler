@@ -9,7 +9,6 @@ import {
   Placeholder
 } from '@vkontakte/vkui';
 
-import Icon28DoneOutline from '@vkontakte/icons/dist/28/done_outline';
 import Icon28ArrowUpOutline from '@vkontakte/icons/dist/28/arrow_up_outline';
 import Icon28ArrowDownOutline from '@vkontakte/icons/dist/28/arrow_down_outline';
 import Icon28GhostSimleOutline from '@vkontakte/icons/dist/28/ghost_simle_outline';
@@ -19,8 +18,14 @@ import Logo from '../../components/Logo.jsx';
 import PatternScore from '../../components/PatternScore.jsx';
 
 import queryGet from '../../functions/query_get.jsx';
+import getRandomInt from '../../functions/get_random_int.jsx';
 
-import { game, randomRequests, checkRequest } from '../../api/api.js';
+import {
+  game,
+  randomRequests,
+  checkRequest,
+  checkUserGroupMember
+} from '../../api/api.js';
 
 import './Game.scss';
 
@@ -43,7 +48,8 @@ export default class extends React.Component {
       isScoreShown: false,
       error: false,
       middleVisible: false,
-      isMiddleShown: false
+      isMiddleShown: false,
+      middleType: 'ads'
     };
 
     this.firstMount = this.firstMount.bind(this);
@@ -53,6 +59,19 @@ export default class extends React.Component {
   }
 
   componentDidMount() {
+    try {
+      checkUserGroupMember((isMember) => {
+        console.log(isMember);
+        if (!isMember) {
+          this.setState({
+            middleType: getRandomInt(0, 100) > 60 ? 'ads' : 'group'
+          });
+        }
+      });
+    } catch (e) {
+      console.log(e);
+    }
+
     this.firstMount();
   }
 
@@ -74,28 +93,34 @@ export default class extends React.Component {
     try {
       game((params) => {
         console.log(params);
-        randomRequests((requests) => {
-          console.log('randomRequests');
-          const newRequestsArray = [];
+        try {
+          randomRequests((requests) => {
+            console.log('randomRequests');
+            const newRequestsArray = [];
 
-          requests.forEach((item) => {
-            const img = new Image();
-            img.src = `https://cloudskyreglis.ru/files/${item.image}`;
+            requests.forEach((item) => {
+              const img = new Image();
+              img.src = `https://cloudskyreglis.ru/files/${item.image}`;
 
-            newRequestsArray.push({
-              id: item.id,
-              name: item.name,
-              image: item.image
+              newRequestsArray.push({
+                id: item.id,
+                name: item.name,
+                image: item.image
+              });
             });
-          });
 
+            this.setState({
+              error: false,
+              firstRequest: requests[0],
+              secondRequest: requests[1]
+            });
+            console.log(requests);
+          }, 2, true);
+        } catch (e) {
           this.setState({
-            error: false,
-            firstRequest: requests[0],
-            secondRequest: requests[1]
+            error: true
           });
-          console.log(requests);
-        }, 2, true);
+        }
       }, 'start');
     } catch (e) {
       this.setState({
@@ -114,7 +139,8 @@ export default class extends React.Component {
       firstRequest,
       secondRequest,
       score,
-      isMiddleShown
+      isMiddleShown,
+      middleType
     } = this.state;
 
     this.setState({
@@ -125,7 +151,7 @@ export default class extends React.Component {
       this.setState({
         loading: false
       });
-    }, 3000);
+    }, 15000);
 
     checkRequest((valid, oldRequests) => {
       if (valid) {
@@ -173,15 +199,23 @@ export default class extends React.Component {
         });
 
         timer = setTimeout(() => {
-          const platform = queryGet('vk_platform');
+          const platform = queryGet('reglis_platform') === 'vk' ? queryGet('vk_platform') : queryGet('platform');
 
           if (
             !isMiddleShown
             && (
-              platform === 'mobile_android'
-              || platform === 'mobile_iphone'
-              || platform === 'mobile_android_messenger'
-              || platform === 'mobile_iphone_messenger'
+              (
+                middleType === 'ads'
+                && (
+                  platform === 'mobile_android'
+                  || platform === 'mobile_iphone'
+                  || platform === 'mobile_android_messenger'
+                  || platform === 'mobile_iphone_messenger'
+                  || platform === 'html5_ios'
+                  || platform === 'html5_android'
+                )
+              )
+              || (middleType === 'group')
             )
           ) {
             this.setState({
@@ -201,7 +235,8 @@ export default class extends React.Component {
 
   async continueGame() {
     const {
-      secondRequest
+      secondRequest,
+      middleType
     } = this.state;
 
     this.setState({
@@ -212,22 +247,39 @@ export default class extends React.Component {
       this.setState({
         loading: false
       });
-    }, 3000);
+    }, 15000);
 
     randomRequests((requests) => {
-      bridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
+      if (middleType === 'ads') {
+        bridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
 
-      this.setState({
-        middleVisible: false,
-        isMiddleShown: true,
-        loading: false
-      });
+        this.setState({
+          middleVisible: false,
+          isMiddleShown: true,
+          loading: false
+        });
 
-      this.setState({
-        firstRequest: { ...secondRequest },
-        secondRequest: requests[0],
-        loading: false
-      });
+        this.setState({
+          firstRequest: { ...secondRequest },
+          secondRequest: requests[0],
+          loading: false
+        });
+      } else if (middleType === 'group') {
+        bridge.sendPromise('VKWebAppJoinGroup', { group_id: 191809582 })
+          .then(() => {
+            this.setState({
+              middleVisible: false,
+              isMiddleShown: true,
+              loading: false
+            });
+
+            this.setState({
+              firstRequest: { ...secondRequest },
+              secondRequest: requests[0],
+              loading: false
+            });
+          });
+      }
     }, 1);
   }
 
@@ -256,7 +308,8 @@ export default class extends React.Component {
       isScoreShown,
       error,
       middleVisible,
-      isMiddleShown
+      isMiddleShown,
+      middleType
     } = this.state;
 
     return (
@@ -274,7 +327,9 @@ export default class extends React.Component {
               <div className="mid-content">
                 <div className="text">
                   <Title level="1" weight="semibold">А вот и не угадал!</Title>
-                  <Title className="description" level="3" weight="regular">Хотел(а) побить рекорд? Не расстраивайся, можно посмотреть короткую рекламу и продолжить играть.</Title>
+                  <Title className="description" level="3" weight="regular">
+                    {middleType === 'ads' ? 'Хотел(а) побить рекорд? Не расстраивайся, можно посмотреть короткую рекламу и продолжить играть.' : 'Хотел(а) побить рекорд? Не расстраивайся, можно подписаться на наше сообщество и продолжить играть. Тебе не сложно, а нам приятно.'}
+                  </Title>
                 </div>
                 <div className="buttons">
                   <Button
@@ -390,7 +445,7 @@ export default class extends React.Component {
             }
             stretched
           >
-            Ой, верните интернет, без него грустно
+            Упс, похоже, что-то пошло не так
           </Placeholder>
         )}
       </Panel>

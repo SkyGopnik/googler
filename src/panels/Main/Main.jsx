@@ -50,7 +50,7 @@ export default class extends React.Component {
       checkUserGroupMember((isMember) => {
         this.setState({
           showGroupBanner: isMember ? false : (
-            getRandomInt(0, 100) > 50
+            getRandomInt(0, 100) > 30
           )
         });
       });

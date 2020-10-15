@@ -52,7 +52,7 @@ export default class extends React.Component {
 
   async getFriendsRankingList() {
     bridge.sendPromise('VKWebAppGetAuthToken', {
-      app_id: Number(queryGet('vk_app_id')),
+      app_id: Number(queryGet('reglis_platform') === 'vk' ? queryGet('vk_app_id') : queryGet('api_id ')),
       scope: 'friends'
     }).then((authInfo) => {
       console.log(authInfo);
@@ -75,7 +75,8 @@ export default class extends React.Component {
 
   async getRankingList(friends) {
     this.setState({
-      loading: true
+      loading: true,
+      activeTab: friends ? 'friends' : 'all'
     });
 
     console.log('test');
@@ -85,14 +86,12 @@ export default class extends React.Component {
           list: ranking.list,
           own: ranking.own,
           error: false,
-          activeTab: friends ? 'friends' : 'all',
           loading: false
         });
       }, friends, 50);
     } catch (e) {
       this.setState({
         error: true,
-        activeTab: friends ? 'friends' : 'all',
         loading: false
       });
     }

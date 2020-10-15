@@ -52,7 +52,7 @@ export default class extends React.Component {
 
   async getFriendsRankingList() {
     bridge.sendPromise('VKWebAppGetAuthToken', {
-      app_id: Number(queryGet('reglis_platform') === 'vk' ? queryGet('vk_app_id') : queryGet('api_id ')),
+      app_id: Number(queryGet('reglis_platform') === 'vk' ? queryGet('vk_app_id') : queryGet('app_id')),
       scope: 'friends'
     }).then((authInfo) => {
       console.log(authInfo);

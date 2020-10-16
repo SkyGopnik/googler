@@ -91,37 +91,28 @@ export default class extends React.Component {
     }
 
     try {
-      game((params) => {
-        console.log(params);
-        try {
-          randomRequests((requests) => {
-            console.log('randomRequests');
-            const newRequestsArray = [];
+      randomRequests((requests) => {
+        console.log('randomRequests');
+        const newRequestsArray = [];
 
-            requests.forEach((item) => {
-              const img = new Image();
-              img.src = `https://cloudskyreglis.ru/files/${item.image}`;
+        requests.forEach((item) => {
+          const img = new Image();
+          img.src = `https://cloudskyreglis.ru/files/${item.image}`;
 
-              newRequestsArray.push({
-                id: item.id,
-                name: item.name,
-                image: item.image
-              });
-            });
-
-            this.setState({
-              error: false,
-              firstRequest: requests[0],
-              secondRequest: requests[1]
-            });
-            console.log(requests);
-          }, 2, true);
-        } catch (e) {
-          this.setState({
-            error: true
+          newRequestsArray.push({
+            id: item.id,
+            name: item.name,
+            image: item.image
           });
-        }
-      }, 'start');
+        });
+
+        this.setState({
+          error: false,
+          firstRequest: requests[0],
+          secondRequest: requests[1]
+        });
+        console.log(requests);
+      }, 2, true);
     } catch (e) {
       this.setState({
         error: true
@@ -130,11 +121,7 @@ export default class extends React.Component {
   }
 
   handleBtn(type) {
-    const {
-      changeView,
-      changeScore,
-      mainScore
-    } = this.props;
+    const { mainScore } = this.props;
     const {
       firstRequest,
       secondRequest,
@@ -155,6 +142,7 @@ export default class extends React.Component {
 
     checkRequest((valid, oldRequests) => {
       if (valid) {
+        console.log(`check request ${valid}`);
         bridge.send('VKWebAppTapticNotificationOccurred', { 'type': 'success' });
 
         timer = setTimeout(() => {
@@ -222,18 +210,15 @@ export default class extends React.Component {
               middleVisible: true
             });
           } else {
-            game((params) => {
-              console.log(params);
-              changeScore(params.score);
-              changeView('app');
-            }, 'end');
+            // TODO: избавится от окончания игры
+            this.endGame();
           }
         }, 1500);
       }
     }, firstRequest.id, secondRequest.id, type);
   }
 
-  async continueGame() {
+  continueGame() {
     const {
       secondRequest,
       middleType
@@ -251,19 +236,30 @@ export default class extends React.Component {
 
     randomRequests((requests) => {
       if (middleType === 'ads') {
-        bridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
+        bridge.sendPromise('VKWebAppShowNativeAds', { ad_format: 'reward' })
+          .then(() => {
+            this.setState({
+              middleVisible: false,
+              isMiddleShown: true
+            });
 
-        this.setState({
-          middleVisible: false,
-          isMiddleShown: true,
-          loading: false
-        });
+            this.setState({
+              firstRequest: { ...secondRequest },
+              secondRequest: requests[0],
+              loading: false
+            });
+          }).catch(() => {
+            this.setState({
+              middleVisible: false,
+              isMiddleShown: true
+            });
 
-        this.setState({
-          firstRequest: { ...secondRequest },
-          secondRequest: requests[0],
-          loading: false
-        });
+            this.setState({
+              firstRequest: { ...secondRequest },
+              secondRequest: requests[0],
+              loading: false
+            });
+          });
       } else if (middleType === 'group') {
         bridge.sendPromise('VKWebAppJoinGroup', { group_id: 191809582 })
           .then(() => {
@@ -289,11 +285,19 @@ export default class extends React.Component {
       changeScore
     } = this.props;
 
-    game((params) => {
-      console.log(params);
-      changeScore(params.score);
-      changeView('app');
-    }, 'end');
+    try {
+      game((params) => {
+        changeScore(params.score);
+        changeView('app');
+      }, 'end');
+    } catch (e) {
+      timer = setTimeout(() => {
+        game((params) => {
+          changeScore(params.score);
+          changeView('app');
+        }, 'end');
+      }, 1000);
+    }
   }
 
   render() {

@@ -8,11 +8,10 @@ import {
   ActionSheetItem,
   IOS,
   platform,
-  Footer,
-  Link,
-  PromoBanner
+  PromoBanner, Spinner
 } from '@vkontakte/vkui';
 
+import Icon28StoryOutline from '@vkontakte/icons/dist/28/story_outline';
 import Icon28ShareOutline from '@vkontakte/icons/dist/28/share_outline';
 import Icon28LinkOutline from '@vkontakte/icons/dist/28/link_outline';
 import Icon28PollSquareOutline from '@vkontakte/icons/dist/28/poll_square_outline';
@@ -27,7 +26,7 @@ import declNum from '../../functions/decl_num.jsx';
 import queryGet from '../../functions/query_get.jsx';
 import getRandomInt from '../../functions/get_random_int.jsx';
 
-import { checkUserGroupMember } from '../../api/api.js';
+import { checkUserGroupMember, game, rankingPosition } from '../../api/api.js';
 
 import './Main.scss';
 
@@ -39,10 +38,13 @@ export default class extends React.Component {
 
     this.state = {
       promoBanner: null,
-      showGroupBanner: false
+      showGroupBanner: false,
+      gameStartLoading: false,
+      position: null
     };
 
     this.shareWall = this.shareWall.bind(this);
+    this.startGame = this.startGame.bind(this);
   }
 
   componentDidMount() {
@@ -52,6 +54,12 @@ export default class extends React.Component {
           showGroupBanner: isMember ? false : (
             getRandomInt(0, 100) > 30
           )
+        });
+      });
+
+      rankingPosition((position) => {
+        this.setState({
+          position
         });
       });
     } catch (e) {
@@ -128,21 +136,83 @@ export default class extends React.Component {
     bridge.sendPromise(
       'VKWebAppShare',
       {
-        'link': 'https://vk.com/app7591808'
+        'link': `https://vk.com/app${queryGet('reglis_platform') === 'vk' ? queryGet('vk_app_id') : queryGet('app_id')}`
       }
     );
+  }
+
+  generateNamePlace(value) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 425;
+    canvas.height = 112;
+    const ctx = canvas.getContext('2d');
+
+    ctx.font = '45px Verdana';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(value, 425 / 2, 70);
+
+    return canvas.toDataURL();
+  }
+
+  shareStory(value) {
+    bridge.send('VKWebAppShowStoryBox',
+      {
+        background_type: 'image',
+        url: 'https://i.imgur.com/LwHnK0E.jpg',
+        stickers: [
+          {
+            sticker_type: 'renderable',
+            sticker: {
+              content_type: 'image',
+              blob: this.generateNamePlace(value),
+              transform: {
+                relation_width: 0.55,
+                gravity: 'center'
+              }
+            }
+          }
+        ],
+        attachment: {
+          text: 'open',
+          type: 'url',
+          url: `https://vk.com/app${queryGet('reglis_platform') === 'vk' ? queryGet('vk_app_id') : queryGet('app_id')}`
+        }
+      });
+  }
+
+  startGame() {
+    const { changeView } = this.props;
+
+    this.setState({
+      gameStartLoading: true
+    });
+
+    try {
+      game(() => {
+        changeView('game');
+      }, 'start');
+    } catch (e) {
+      this.setState({
+        gameStartLoading: false
+      });
+    }
   }
 
   render() {
     const {
       id,
       score,
-      changeView,
       changePopout,
       onPanelChange,
       isStartScreen
     } = this.props;
-    const { promoBanner, showGroupBanner } = this.state;
+    const {
+      promoBanner,
+      showGroupBanner,
+      gameStartLoading,
+      position
+    } = this.state;
 
     return (
       <Panel id={id}>
@@ -160,14 +230,16 @@ export default class extends React.Component {
                       <Title level="3" weight="regular">Твой рекорд</Title>
                       <Title className="stat-num" level="1" weight="regular">{score.record}</Title>
                     </div>
-                    {/*<div className="item">*/}
-                    {/*  <Title level="3" weight="regular">Место в рейтинге</Title>*/}
-                    {/*  <Title className="stat-num" level="1" weight="regular">213</Title>*/}
-                    {/*</div>*/}
+                    {position && (
+                      <div className="item">
+                        <Title level="3" weight="regular">Место в рейтинге</Title>
+                        <Title className="stat-num" level="1" weight="regular">{position}</Title>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
-                score.now <= score.record ? (
+                score.now !== score.record ? (
                   <>
                     <Title className="header-title" level="1" weight="bold">{this.getPhrase(score.now)}</Title>
                     <div className="stat">
@@ -201,9 +273,10 @@ export default class extends React.Component {
                   size="xl"
                   mode="commerce"
                   stretched
-                  onClick={() => changeView('game')}
+                  disabled={gameStartLoading}
+                  onClick={() => this.startGame()}
                 >
-                  Начать игру!
+                  {!gameStartLoading ? 'Начать игру' : <Spinner />}
                 </Button>
                 <Button
                   before={<Icon28PollSquareOutline />}
@@ -245,9 +318,10 @@ export default class extends React.Component {
                     size="xl"
                     mode="commerce"
                     stretched
-                    onClick={() => changeView('game')}
+                    disabled={gameStartLoading}
+                    onClick={() => this.startGame()}
                   >
-                    Начать заново
+                    {!gameStartLoading ? 'Начать заново' : <Spinner />}
                   </Button>
                   <div className="buttons-group" style={{ display: 'flex' }}>
                     <Button
@@ -267,11 +341,18 @@ export default class extends React.Component {
                       stretched
                       onClick={() => changePopout(
                         <ActionSheet onClose={() => changePopout(null)}>
-                          {/*<ActionSheetItem before={<Icon28StoryOutline />} autoclose>*/}
-                          {/*  В истории*/}
-                          {/*</ActionSheetItem>*/}
+                          {queryGet('vk_platform') !== 'mobile_web'
+                          && queryGet('platform') !== 'html5_mobile'&& (
+                            <ActionSheetItem
+                              onClick={() => this.shareStory(`${score.now} ${declNum(score.now, ['очко', 'очка', 'очков'])}`)}
+                              before={<Icon28StoryOutline />}
+                              autoclose
+                            >
+                              В истории
+                            </ActionSheetItem>
+                          )}
                           <ActionSheetItem
-                            onClick={this.shareWall}
+                            onClick={() => this.shareWall()}
                             before={<Icon28ShareOutline />}
                             autoclose
                           >
@@ -279,7 +360,7 @@ export default class extends React.Component {
                           </ActionSheetItem>
                           {queryGet('vk_platform') !== 'desktop_web' && (
                             <ActionSheetItem
-                              onClick={this.shareLink}
+                              onClick={() => this.shareLink()}
                               before={<Icon28LinkOutline />}
                               autoclose
                             >

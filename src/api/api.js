@@ -1,6 +1,8 @@
 import io from 'socket.io-client';
 
-const socket = io('https://googler-io.skyreglis.studio');
+const socket = io('https://googler-io.skyreglis.studio', {
+  transports: ['polling']
+});
 
 export function game(cb, type) {
   if (socket.connected) {
@@ -25,9 +27,22 @@ export function ranking(cb, friends, limit) {
   }
 }
 
-export function userAuth(cb) {
-  socket.once('userAuth', (valid) => cb(valid));
-  socket.emit('userAuth', document.location.href);
+export function rankingPosition(cb) {
+  if (socket.connected) {
+    socket.once('rankingPosition', (position) => cb(position));
+    socket.emit('rankingPosition');
+  } else {
+    throw Error('Connection error');
+  }
+}
+
+export function userAuth(cb, reconnect = false) {
+  if (socket.connected || reconnect) {
+    socket.once('userAuth', (valid) => cb(valid));
+    socket.emit('userAuth', document.location.href);
+  } else {
+    throw Error('Connection error');
+  }
 }
 
 export function reconnect() {
@@ -77,7 +92,7 @@ socket.on('reconnect', () => {
 
   userAuth(() => {
     reconnect();
-  });
+  }, true);
 });
 
 socket.on('disconnect', () => {

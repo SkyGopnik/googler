@@ -19,6 +19,21 @@ body::-webkit-scrollbar {
   cursor: pointer !important;
 }
 
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.first-connect-try {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
 body[scheme="space_gray"] {
   // Скелетон
   .react-skeleton-load {
